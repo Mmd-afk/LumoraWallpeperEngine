@@ -1,0 +1,6 @@
+{
+  "name": "Lumora OS 4K Wallpaper",
+  "description": "Official Lumora OS 4K 16:9 futuristic desktop wallpaper with sculpted glass typography, fluid architectural ribbons, dynamic light shaders, and full-resolution 4K export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
