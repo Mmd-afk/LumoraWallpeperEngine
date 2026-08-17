@@ -1,6 +1,7 @@
 import React from 'react';
 import { WallpaperSettings, LumoraTheme } from '../types';
 import { ThemeSelector } from './ThemeSelector';
+import { ThemeColorStudio } from './ThemeColorStudio';
 import { TextCustomizer } from './TextCustomizer';
 import { 
   Sun, 
@@ -13,7 +14,10 @@ import {
   Eye, 
   Maximize,
   Radio,
-  Feather
+  Feather,
+  Move,
+  Target,
+  Grid
 } from 'lucide-react';
 import { LUMORA_THEMES, DEFAULT_SETTINGS } from '../data/themes';
 
@@ -22,6 +26,7 @@ interface ControlsPanelProps {
   onChangeSettings: (newSettings: WallpaperSettings) => void;
   currentTheme: LumoraTheme;
   onSelectTheme: (theme: LumoraTheme) => void;
+  onChangeTheme: (theme: LumoraTheme) => void;
   desktopPreview: boolean;
   onToggleDesktopPreview: () => void;
   onOpenExport: () => void;
@@ -32,6 +37,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
   onChangeSettings,
   currentTheme,
   onSelectTheme,
+  onChangeTheme,
   desktopPreview,
   onToggleDesktopPreview,
   onOpenExport,
@@ -66,6 +72,9 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
       themeId: currentTheme.id,
     });
   };
+
+  const posX = settings.letterCenterX !== undefined ? settings.letterCenterX : 50;
+  const posY = settings.letterCenterY !== undefined ? settings.letterCenterY : 50;
 
   return (
     <div 
@@ -115,7 +124,115 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
         }}
       />
 
-      {/* 2. Desktop Usability Simulator Toggle */}
+      {/* 2. Custom Color Studio for the Edition */}
+      <ThemeColorStudio
+        currentTheme={currentTheme}
+        onChangeTheme={onChangeTheme}
+      />
+
+      {/* 3. Central "L" Emblem Positioning */}
+      <div className="p-4 rounded-2xl bg-neutral-900/60 border border-white/10 space-y-3">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-semibold text-neutral-200 uppercase tracking-wider flex items-center space-x-1.5">
+            <Move className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Central 'L' Position</span>
+          </label>
+          <div className="flex items-center space-x-2">
+            <span className="text-[10px] font-mono text-cyan-400">
+              X:{Math.round(posX)}% Y:{Math.round(posY)}%
+            </span>
+            {(posX !== 50 || posY !== 50) && (
+              <button
+                id="btn-reset-l-position"
+                onClick={() => {
+                  updateSetting('letterCenterX', 50);
+                  updateSetting('letterCenterY', 50);
+                }}
+                className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-900"
+              >
+                Center
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Position Preset Anchors (3x3 Grid) */}
+        <div className="space-y-1">
+          <div className="text-[10px] text-neutral-400 flex items-center justify-between">
+            <span>Quick Anchors (Or drag on canvas)</span>
+          </div>
+          <div className="grid grid-cols-3 gap-1.5">
+            {[
+              { label: 'Top Left', x: 28, y: 30 },
+              { label: 'Top Center', x: 50, y: 32 },
+              { label: 'Top Right', x: 72, y: 30 },
+              { label: 'Center Left', x: 30, y: 50 },
+              { label: 'Centered (Default)', x: 50, y: 50 },
+              { label: 'Center Right', x: 70, y: 50 },
+              { label: 'Bottom Left', x: 28, y: 70 },
+              { label: 'Bottom Center', x: 50, y: 68 },
+              { label: 'Bottom Right', x: 72, y: 70 },
+            ].map((anchor) => {
+              const isMatch = Math.abs(posX - anchor.x) < 3 && Math.abs(posY - anchor.y) < 3;
+              return (
+                <button
+                  key={anchor.label}
+                  id={`btn-anchor-${anchor.label.toLowerCase().replace(/\s+/g, '-')}`}
+                  onClick={() => {
+                    updateSetting('letterCenterX', anchor.x);
+                    updateSetting('letterCenterY', anchor.y);
+                  }}
+                  className={`py-1 px-1.5 rounded-lg border text-[10px] truncate transition-all text-center ${
+                    isMatch
+                      ? 'border-cyan-500 bg-cyan-950/40 text-cyan-300 font-semibold shadow-sm'
+                      : 'border-white/5 bg-neutral-950/40 text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900'
+                  }`}
+                >
+                  {anchor.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Horizontal Position (X) */}
+        <div className="space-y-1 pt-1">
+          <div className="flex justify-between text-[11px]">
+            <span className="text-neutral-400">Horizontal Offset (X)</span>
+            <span className="font-mono text-neutral-300">{Math.round(posX)}%</span>
+          </div>
+          <input
+            id="slider-letter-center-x"
+            type="range"
+            min="15"
+            max="85"
+            step="0.5"
+            value={posX}
+            onChange={(e) => updateSetting('letterCenterX', Number(e.target.value))}
+            className="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+          />
+        </div>
+
+        {/* Vertical Position (Y) */}
+        <div className="space-y-1">
+          <div className="flex justify-between text-[11px]">
+            <span className="text-neutral-400">Vertical Offset (Y)</span>
+            <span className="font-mono text-neutral-300">{Math.round(posY)}%</span>
+          </div>
+          <input
+            id="slider-letter-center-y"
+            type="range"
+            min="15"
+            max="85"
+            step="0.5"
+            value={posY}
+            onChange={(e) => updateSetting('letterCenterY', Number(e.target.value))}
+            className="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+          />
+        </div>
+      </div>
+
+      {/* 4. Desktop Usability Simulator Toggle */}
       <div className="p-3.5 rounded-xl bg-neutral-900/50 border border-white/5 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-cyan-400">
@@ -146,14 +263,14 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
         </button>
       </div>
 
-      {/* 3. Lumora Branding Text & Customizer (Position, Color, Typography) */}
+      {/* 5. Lumora Branding Text & Customizer (Position, Color, Typography) */}
       <TextCustomizer
         settings={settings}
         onChangeSettings={onChangeSettings}
         currentTheme={currentTheme}
       />
 
-      {/* 4. Lighting & Optics Customization */}
+      {/* 6. Lighting & Optics Customization */}
       <div className="space-y-4">
         <label className="text-xs font-semibold text-neutral-300 uppercase tracking-wider flex items-center space-x-1.5">
           <Sun className="w-3.5 h-3.5 text-cyan-400" />
@@ -222,7 +339,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
         </div>
       </div>
 
-      {/* 4. Geometry & Composition */}
+      {/* 7. Geometry & Composition */}
       <div className="space-y-4">
         <label className="text-xs font-semibold text-neutral-300 uppercase tracking-wider flex items-center space-x-1.5">
           <Layers className="w-3.5 h-3.5 text-cyan-400" />
@@ -316,3 +433,4 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
     </div>
   );
 };
+

@@ -92,33 +92,18 @@ export const TextCustomizer: React.FC<TextCustomizerProps> = ({
 
       {settings.enableText && (
         <div className="space-y-4 animate-fadeIn">
-          {/* 2. Text Input Strings */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <label className="text-[11px] text-neutral-400">Main Title</label>
-              <input
-                id="input-text-string"
-                type="text"
-                value={settings.textString}
-                onChange={(e) => updateSetting('textString', e.target.value)}
-                placeholder="LUMORA"
-                maxLength={30}
-                className="w-full px-2.5 py-1.5 rounded-lg bg-neutral-900 border border-white/10 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-cyan-500"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[11px] text-neutral-400">Subtitle (Optional)</label>
-              <input
-                id="input-text-subtitle"
-                type="text"
-                value={settings.textSubtitle}
-                onChange={(e) => updateSetting('textSubtitle', e.target.value)}
-                placeholder="OPERATING SYSTEM"
-                maxLength={40}
-                className="w-full px-2.5 py-1.5 rounded-lg bg-neutral-900 border border-white/10 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-cyan-500"
-              />
-            </div>
+          {/* 2. Text Input String */}
+          <div className="space-y-1">
+            <label className="text-[11px] text-neutral-400">Branding Text</label>
+            <input
+              id="input-text-string"
+              type="text"
+              value={settings.textString}
+              onChange={(e) => updateSetting('textString', e.target.value)}
+              placeholder="LUMORA"
+              maxLength={30}
+              className="w-full px-3 py-2 rounded-lg bg-neutral-900 border border-white/10 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-cyan-500 font-medium"
+            />
           </div>
 
           {/* 3. Placement Selection Grid */}

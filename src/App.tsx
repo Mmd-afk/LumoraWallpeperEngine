@@ -84,6 +84,7 @@ export default function App() {
             onChangeSettings={setSettings}
             currentTheme={currentTheme}
             onSelectTheme={handleSelectTheme}
+            onChangeTheme={setCurrentTheme}
             desktopPreview={desktopPreview}
             onToggleDesktopPreview={() => setDesktopPreview((prev) => !prev)}
             onOpenExport={() => setIsExportOpen(true)}

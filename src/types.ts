@@ -35,6 +35,8 @@ export interface WallpaperSettings {
   particleDensity: number; // 0 to 1.0
   grainAmount: number; // 0 to 0.5
   letterScale: number; // 0.7 to 1.3
+  letterCenterX: number; // 0 to 100 (% of width)
+  letterCenterY: number; // 0 to 100 (% of height)
   glowSpread: number; // 0.5 to 2.0
   colorShift: number; // -180 to 180
   mouseParallax: boolean;
@@ -42,7 +44,6 @@ export interface WallpaperSettings {
   // Lumora Text Branding Settings
   enableText: boolean;
   textString: string;
-  textSubtitle: string;
   textColor: string;
   textColorMode: 'preset' | 'custom' | 'accent' | 'rim' | 'white';
   textPosition: TextPlacement;

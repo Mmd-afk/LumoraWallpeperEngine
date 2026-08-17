@@ -571,7 +571,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                   >
                     <div>
                       <div className="text-xs font-semibold">Clean Minimal</div>
-                      <div className="text-[10px] text-neutral-400">No text or subtitles</div>
+                      <div className="text-[10px] text-neutral-400">Pure wallpaper, no text</div>
                     </div>
                     {!settings.enableText && <Check className="w-4 h-4 text-cyan-400" />}
                   </button>

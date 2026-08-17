@@ -22,8 +22,10 @@ export function renderLumoraWallpaper(
   ctx.save();
   ctx.clearRect(0, 0, width, height);
 
-  const cx = width / 2 + parallaxX * 28;
-  const cy = height / 2 + parallaxY * 20;
+  const baseX = (settings.letterCenterX !== undefined ? settings.letterCenterX / 100 : 0.5) * width;
+  const baseY = (settings.letterCenterY !== undefined ? settings.letterCenterY / 100 : 0.5) * height;
+  const cx = baseX + parallaxX * 28;
+  const cy = baseY + parallaxY * 20;
   const scale = (Math.min(width, height) / 1080) * settings.letterScale;
 
   // 1. Sophisticated Deep Dark Background with Volumetric Ambient Cones
@@ -860,22 +862,6 @@ function drawLumoraText(
     ctx.strokeStyle = hexToRgba(theme.rimLight, 0.85);
     ctx.lineWidth = 1.2 * scale;
     drawSpacedText(ctx, settings.textString.toUpperCase(), tx, ty, tracking, true);
-  }
-
-  // Draw Subtitle if present
-  if (settings.textSubtitle && settings.textSubtitle.trim().length > 0) {
-    const subFontSize = Math.round(9 * scale * settings.textSize);
-    const subTracking = Math.round(tracking * 0.9 + 4 * scale);
-    const subY = ty + fontSize * 0.8 + 6 * scale;
-
-    ctx.font = `500 ${subFontSize}px 'Outfit', sans-serif`;
-    ctx.shadowBlur = settings.textGlow ? 12 * scale * settings.textGlowIntensity : 0;
-    ctx.fillStyle = hexToRgba(
-      settings.textColorMode === 'white' ? '#ffffff' : theme.rimLight,
-      settings.textOpacity * 0.75
-    );
-
-    drawSpacedText(ctx, settings.textSubtitle.toUpperCase(), tx, subY, subTracking);
   }
 
   ctx.restore();

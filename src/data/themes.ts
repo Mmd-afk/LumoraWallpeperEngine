@@ -120,14 +120,15 @@ export const DEFAULT_SETTINGS: WallpaperSettings = {
   particleDensity: 0.25,
   grainAmount: 0.08,
   letterScale: 1.0,
+  letterCenterX: 50,
+  letterCenterY: 50,
   glowSpread: 1.1,
   colorShift: 0,
   mouseParallax: true,
 
-  // Text Branding Defaults
-  enableText: true,
+  // Text Branding Defaults (Off by default, clean wallpaper)
+  enableText: false,
   textString: 'LUMORA',
-  textSubtitle: 'OPERATING SYSTEM',
   textColor: '#00d8f6',
   textColorMode: 'accent',
   textPosition: 'bottom-center',

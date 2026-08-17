@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { LumoraTheme, WallpaperSettings } from '../types';
 import { renderLumoraWallpaper, getTextCoordinates } from '../utils/renderer';
-import { ZoomIn, ZoomOut, RotateCcw, Maximize2, Sparkles, Move, Type } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, Maximize2, Sparkles, Move, Type, Compass, Target } from 'lucide-react';
 
 interface WallpaperCanvasProps {
   theme: LumoraTheme;
@@ -25,6 +25,8 @@ export const WallpaperCanvas: React.FC<WallpaperCanvasProps> = ({
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDraggingPan, setIsDraggingPan] = useState(false);
   const [isDraggingText, setIsDraggingText] = useState(false);
+  const [isDraggingEmblem, setIsDraggingEmblem] = useState(false);
+  const [interactionMode, setInteractionMode] = useState<'auto' | 'move-l' | 'move-text'>('auto');
   const dragStartRef = useRef({ x: 0, y: 0 });
 
   // Handle canvas rendering
@@ -71,18 +73,42 @@ export const WallpaperCanvas: React.FC<WallpaperCanvasProps> = ({
         time,
       });
 
-      // If user is actively dragging the text in custom mode, draw subtle alignment guide
+      // If user is actively dragging the central L emblem, draw subtle alignment guide
+      if (isDraggingEmblem) {
+        const lx = ((settings.letterCenterX !== undefined ? settings.letterCenterX : 50) / 100) * displayWidth;
+        const ly = ((settings.letterCenterY !== undefined ? settings.letterCenterY : 50) / 100) * displayHeight;
+
+        ctx.strokeStyle = 'rgba(0, 216, 246, 0.65)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 5]);
+
+        // Crosshair guides through the L emblem center
+        ctx.beginPath();
+        ctx.moveTo(lx, 0);
+        ctx.lineTo(lx, displayHeight);
+        ctx.moveTo(0, ly);
+        ctx.lineTo(displayWidth, ly);
+        ctx.stroke();
+
+        // Central target circle
+        ctx.beginPath();
+        ctx.arc(lx, ly, 16, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+      }
+
+      // If user is actively dragging the text, draw subtle alignment guide
       if (isDraggingText && settings.enableText) {
-        const cx = displayWidth / 2 + parallaxX * 28;
-        const cy = displayHeight / 2 + parallaxY * 20;
+        const cx = ((settings.letterCenterX !== undefined ? settings.letterCenterX : 50) / 100) * displayWidth + parallaxX * 28;
+        const cy = ((settings.letterCenterY !== undefined ? settings.letterCenterY : 50) / 100) * displayHeight + parallaxY * 20;
         const scale = (Math.min(displayWidth, displayHeight) / 1080) * settings.letterScale;
         const coords = getTextCoordinates(displayWidth, displayHeight, cx, cy, scale, settings);
 
-        ctx.strokeStyle = 'rgba(0, 216, 246, 0.6)';
+        ctx.strokeStyle = 'rgba(255, 0, 127, 0.65)';
         ctx.lineWidth = 1;
         ctx.setLineDash([4, 4]);
 
-        // Crosshair guides
         ctx.beginPath();
         ctx.moveTo(coords.x, 0);
         ctx.lineTo(coords.x, displayHeight);
@@ -95,7 +121,7 @@ export const WallpaperCanvas: React.FC<WallpaperCanvasProps> = ({
 
       ctx.restore();
     },
-    [theme, settings, mousePos, zoom, pan, isDraggingText]
+    [theme, settings, mousePos, zoom, pan, isDraggingText, isDraggingEmblem]
   );
 
   useEffect(() => {
@@ -133,8 +159,8 @@ export const WallpaperCanvas: React.FC<WallpaperCanvasProps> = ({
     const clickY = clientY - rect.top;
 
     const scale = (Math.min(w, h) / 1080) * settings.letterScale;
-    const cx = w / 2;
-    const cy = h / 2;
+    const cx = ((settings.letterCenterX !== undefined ? settings.letterCenterX : 50) / 100) * w;
+    const cy = ((settings.letterCenterY !== undefined ? settings.letterCenterY : 50) / 100) * h;
     const coords = getTextCoordinates(w, h, cx, cy, scale, settings);
 
     const hitWidth = 240 * scale * settings.textSize;
@@ -146,12 +172,53 @@ export const WallpaperCanvas: React.FC<WallpaperCanvasProps> = ({
     );
   };
 
+  // Check if click is near the sculpted L emblem center
+  const isNearEmblem = (clientX: number, clientY: number): boolean => {
+    if (!containerRef.current) return false;
+    const rect = containerRef.current.getBoundingClientRect();
+    const w = rect.width;
+    const h = rect.height;
+    const clickX = clientX - rect.left;
+    const clickY = clientY - rect.top;
+
+    const lx = ((settings.letterCenterX !== undefined ? settings.letterCenterX : 50) / 100) * w;
+    const ly = ((settings.letterCenterY !== undefined ? settings.letterCenterY : 50) / 100) * h;
+
+    const hitRadius = Math.min(w, h) * 0.22 * settings.letterScale;
+
+    return (
+      Math.abs(clickX - lx) < hitRadius &&
+      Math.abs(clickY - ly) < hitRadius
+    );
+  };
+
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
 
-    // Check if dragging text
-    if (settings.enableText && (isNearText(e.clientX, e.clientY) || settings.textPosition === 'custom')) {
+    // 1. If explicit 'move-l' mode or clicked on the central emblem
+    if (
+      (interactionMode === 'move-l' || (interactionMode === 'auto' && isNearEmblem(e.clientX, e.clientY))) &&
+      !isNearText(e.clientX, e.clientY)
+    ) {
+      if (onChangeSettings) {
+        setIsDraggingEmblem(true);
+        const normX = Math.max(10, Math.min(90, ((e.clientX - rect.left) / rect.width) * 100));
+        const normY = Math.max(10, Math.min(90, ((e.clientY - rect.top) / rect.height) * 100));
+        onChangeSettings({
+          ...settings,
+          letterCenterX: Number(normX.toFixed(1)),
+          letterCenterY: Number(normY.toFixed(1)),
+        });
+        return;
+      }
+    }
+
+    // 2. Check if dragging text
+    if (
+      settings.enableText &&
+      (interactionMode === 'move-text' || isNearText(e.clientX, e.clientY) || settings.textPosition === 'custom')
+    ) {
       if (onChangeSettings) {
         setIsDraggingText(true);
         const normX = Math.max(5, Math.min(95, ((e.clientX - rect.left) / rect.width) * 100));
@@ -166,7 +233,7 @@ export const WallpaperCanvas: React.FC<WallpaperCanvasProps> = ({
       }
     }
 
-    // Pan zoom
+    // 3. Pan zoom
     if (e.button === 0 && zoom > 1) {
       setIsDraggingPan(true);
       dragStartRef.current = {
@@ -179,6 +246,18 @@ export const WallpaperCanvas: React.FC<WallpaperCanvasProps> = ({
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
+
+    // Update central L emblem dragging position
+    if (isDraggingEmblem && onChangeSettings) {
+      const normX = Math.max(10, Math.min(90, ((e.clientX - rect.left) / rect.width) * 100));
+      const normY = Math.max(10, Math.min(90, ((e.clientY - rect.top) / rect.height) * 100));
+      onChangeSettings({
+        ...settings,
+        letterCenterX: Number(normX.toFixed(1)),
+        letterCenterY: Number(normY.toFixed(1)),
+      });
+      return;
+    }
 
     // Update text dragging position
     if (isDraggingText && onChangeSettings) {
@@ -211,6 +290,7 @@ export const WallpaperCanvas: React.FC<WallpaperCanvasProps> = ({
   const handleMouseUp = () => {
     setIsDraggingPan(false);
     setIsDraggingText(false);
+    setIsDraggingEmblem(false);
   };
 
   const resetView = () => {
@@ -218,12 +298,22 @@ export const WallpaperCanvas: React.FC<WallpaperCanvasProps> = ({
     setPan({ x: 0, y: 0 });
   };
 
+  const resetEmblemCenter = () => {
+    if (onChangeSettings) {
+      onChangeSettings({
+        ...settings,
+        letterCenterX: 50,
+        letterCenterY: 50,
+      });
+    }
+  };
+
   return (
     <div
       ref={containerRef}
       id="lumora-canvas-container"
       className={`relative w-full h-full flex items-center justify-center overflow-hidden bg-black select-none ${
-        isDraggingText
+        isDraggingEmblem || isDraggingText
           ? 'cursor-crosshair'
           : zoom > 1
           ? isDraggingPan
@@ -245,6 +335,22 @@ export const WallpaperCanvas: React.FC<WallpaperCanvasProps> = ({
         className="w-full h-full object-cover block"
       />
 
+      {/* Center "L" Position Indicator Pill */}
+      {((settings.letterCenterX !== undefined && settings.letterCenterX !== 50) || 
+        (settings.letterCenterY !== undefined && settings.letterCenterY !== 50)) && (
+        <div className="absolute top-4 right-4 z-20 flex items-center space-x-1.5 p-1.5 px-2.5 rounded-xl bg-neutral-950/70 backdrop-blur-md border border-cyan-500/30 text-[11px] text-cyan-300 shadow-xl">
+          <Target className="w-3.5 h-3.5 text-cyan-400" />
+          <span>L Position: {Math.round(settings.letterCenterX || 50)}%, {Math.round(settings.letterCenterY || 50)}%</span>
+          <button
+            id="btn-recenter-l-quick"
+            onClick={resetEmblemCenter}
+            className="ml-1 text-[10px] underline hover:text-white"
+          >
+            Center
+          </button>
+        </div>
+      )}
+
       {/* Floating Canvas Quick Navigation Bar */}
       <div 
         id="canvas-floating-controls"
@@ -252,6 +358,32 @@ export const WallpaperCanvas: React.FC<WallpaperCanvasProps> = ({
           isFullscreen ? 'opacity-0 hover:opacity-100' : 'opacity-90 hover:opacity-100'
         }`}
       >
+        {/* Quick Drag Mode Toggle */}
+        <button
+          id="btn-mode-move-l"
+          onClick={() => setInteractionMode(interactionMode === 'move-l' ? 'auto' : 'move-l')}
+          title="Drag to Reposition Central 'L' Emblem"
+          className={`p-1.5 rounded-lg text-xs flex items-center space-x-1 transition-colors ${
+            interactionMode === 'move-l'
+              ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50'
+              : 'text-neutral-400 hover:text-white hover:bg-white/10'
+          }`}
+        >
+          <Move className="w-3.5 h-3.5 text-cyan-400" />
+          <span className="text-[10px] font-medium hidden sm:inline">Move L</span>
+        </button>
+
+        <button
+          id="btn-center-l-action"
+          onClick={resetEmblemCenter}
+          title="Center L in Middle (50%, 50%)"
+          className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-colors"
+        >
+          <Target className="w-3.5 h-3.5" />
+        </button>
+
+        <div className="w-[1px] h-4 bg-white/10 mx-0.5" />
+
         <button
           id="btn-zoom-in"
           onClick={() => setZoom((z) => Math.min(z + 0.25, 3))}
@@ -285,7 +417,7 @@ export const WallpaperCanvas: React.FC<WallpaperCanvasProps> = ({
           </button>
         )}
 
-        <div className="w-[1px] h-4 bg-white/10 mx-1" />
+        <div className="w-[1px] h-4 bg-white/10 mx-0.5" />
 
         <button
           id="btn-toggle-fullscreen"
@@ -309,4 +441,5 @@ export const WallpaperCanvas: React.FC<WallpaperCanvasProps> = ({
     </div>
   );
 };
+
 
