@@ -14,6 +14,7 @@ import {
   Loader2,
   FileDown,
   Eye,
+  EyeOff,
   ZoomIn,
   ZoomOut,
   Maximize2,
@@ -22,7 +23,9 @@ import {
   Battery,
   Wifi,
   HardDrive,
-  Type
+  Type,
+  Target,
+  Droplets
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -576,6 +579,64 @@ export const ExportModal: React.FC<ExportModalProps> = ({
                     {!settings.enableText && <Check className="w-4 h-4 text-cyan-400" />}
                   </button>
                 </div>
+              </div>
+
+              {/* 4. Central 'L' Emblem & Blur Quick Options */}
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                {/* Central Emblem Toggle */}
+                <button
+                  id="btn-export-toggle-emblem"
+                  onClick={() => onChangeSettings && onChangeSettings({ ...settings, showEmblem: settings.showEmblem === false ? true : false })}
+                  className={`p-2.5 rounded-xl border text-left transition-all flex items-center justify-between ${
+                    settings.showEmblem !== false
+                      ? 'border-cyan-500/40 bg-cyan-950/20 text-white'
+                      : 'border-white/5 bg-neutral-950/40 text-neutral-400 hover:bg-neutral-800/50'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <Target className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                    <div>
+                      <div className="text-xs font-semibold">Central 'L' Emblem</div>
+                      <div className="text-[10px] text-neutral-400">
+                        {settings.showEmblem !== false ? 'Emblem visible' : 'Completely removed'}
+                      </div>
+                    </div>
+                  </div>
+                  {settings.showEmblem !== false && <Check className="w-3.5 h-3.5 text-cyan-400" />}
+                </button>
+
+                {/* Blur Wallpaper Toggle */}
+                <button
+                  id="btn-export-toggle-blur"
+                  onClick={() => {
+                    if (onChangeSettings) {
+                      const willBlur = !settings.enableBlur;
+                      onChangeSettings({
+                        ...settings,
+                        enableBlur: willBlur,
+                        blurAmount: willBlur && (!settings.blurAmount || settings.blurAmount === 0) ? 16 : settings.blurAmount || 16,
+                      });
+                    }
+                  }}
+                  className={`p-2.5 rounded-xl border text-left transition-all flex items-center justify-between ${
+                    settings.enableBlur && (settings.blurAmount || 0) > 0
+                      ? 'border-cyan-500/40 bg-cyan-950/20 text-white'
+                      : 'border-white/5 bg-neutral-950/40 text-neutral-400 hover:bg-neutral-800/50'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <Droplets className="w-4 h-4 text-cyan-400 flex-shrink-0" />
+                    <div>
+                      <div className="text-xs font-semibold">Wallpaper Blur</div>
+                      <div className="text-[10px] text-neutral-400">
+                        {settings.enableBlur && (settings.blurAmount || 0) > 0
+                          ? `Active (${settings.blurAmount}px)`
+                          : 'Off (Crisp 4K)'}
+                      </div>
+                    </div>
+                  </div>
+                  {settings.enableBlur && (settings.blurAmount || 0) > 0 && <Check className="w-3.5 h-3.5 text-cyan-400" />}
+                </button>
               </div>
             </div>
 

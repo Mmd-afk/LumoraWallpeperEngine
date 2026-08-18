@@ -37,6 +37,9 @@ export interface WallpaperSettings {
   letterScale: number; // 0.7 to 1.3
   letterCenterX: number; // 0 to 100 (% of width)
   letterCenterY: number; // 0 to 100 (% of height)
+  showEmblem: boolean; // toggle central sculpted 'L' emblem visibility
+  enableBlur: boolean; // toggle overall wallpaper blur effect
+  blurAmount: number; // 0 to 60px blur radius
   glowSpread: number; // 0.5 to 2.0
   colorShift: number; // -180 to 180
   mouseParallax: boolean;

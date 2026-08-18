@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, Download, Eye, Maximize, Sliders, Type } from 'lucide-react';
+import { Sparkles, Download, Eye, EyeOff, Maximize, Sliders, Type, Target, Droplets } from 'lucide-react';
 import { LumoraTheme, WallpaperSettings } from '../types';
 
 interface HeaderProps {
@@ -24,6 +24,9 @@ export const Header: React.FC<HeaderProps> = ({
   isFullscreen,
 }) => {
   if (isFullscreen) return null;
+
+  const isEmblemVisible = settings.showEmblem !== false;
+  const isBlurred = settings.enableBlur && (settings.blurAmount || 0) > 0;
 
   return (
     <header 
@@ -53,6 +56,43 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Quick Action Controls */}
       <div className="flex items-center space-x-2">
+        {/* Quick Central Emblem Toggle Button */}
+        <button
+          id="header-btn-toggle-emblem"
+          onClick={() => onChangeSettings({ ...settings, showEmblem: !isEmblemVisible })}
+          className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center space-x-1.5 ${
+            isEmblemVisible
+              ? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-300 shadow-[0_0_10px_rgba(0,216,246,0.1)]'
+              : 'bg-neutral-900 border-white/10 text-neutral-400 hover:bg-neutral-800 hover:text-white'
+          }`}
+          title={isEmblemVisible ? 'Click to completely hide the central L emblem' : 'Click to show the central L emblem'}
+        >
+          {isEmblemVisible ? <Target className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+          <span className="hidden sm:inline">{isEmblemVisible ? "'L' Emblem: ON" : "'L' Emblem: OFF"}</span>
+        </button>
+
+        {/* Quick Wallpaper Blur Toggle Button */}
+        <button
+          id="header-btn-toggle-blur"
+          onClick={() => {
+            const nextBlur = !settings.enableBlur;
+            onChangeSettings({
+              ...settings,
+              enableBlur: nextBlur,
+              blurAmount: nextBlur && (!settings.blurAmount || settings.blurAmount === 0) ? 16 : settings.blurAmount || 16,
+            });
+          }}
+          className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-all flex items-center space-x-1.5 ${
+            isBlurred
+              ? 'bg-cyan-500/15 border-cyan-500/30 text-cyan-300 shadow-[0_0_10px_rgba(0,216,246,0.1)]'
+              : 'bg-neutral-900 border-white/10 text-neutral-400 hover:bg-neutral-800 hover:text-white'
+          }`}
+          title={isBlurred ? 'Click to disable wallpaper blur' : 'Click to enable wallpaper blur'}
+        >
+          <Droplets className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">{isBlurred ? `Blur: ${settings.blurAmount || 16}px` : 'Blur: OFF'}</span>
+        </button>
+
         {/* Quick Text / Clean Toggle Button */}
         <button
           id="header-btn-toggle-text"
@@ -65,7 +105,7 @@ export const Header: React.FC<HeaderProps> = ({
           title={settings.enableText ? 'Click to hide branding text for clean wallpaper' : 'Click to show branding text'}
         >
           <Type className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">{settings.enableText ? 'Text: ON' : 'Text: OFF (Clean)'}</span>
+          <span className="hidden sm:inline">{settings.enableText ? 'Text: ON' : 'Text: OFF'}</span>
         </button>
 
         <button

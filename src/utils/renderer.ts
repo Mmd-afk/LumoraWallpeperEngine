@@ -28,6 +28,18 @@ export function renderLumoraWallpaper(
   const cy = baseY + parallaxY * 20;
   const scale = (Math.min(width, height) / 1080) * settings.letterScale;
 
+  // 1. Base dark fill (always unblurred to prevent border transparent fringing)
+  ctx.fillStyle = theme.backgroundStart;
+  ctx.fillRect(0, 0, width, height);
+
+  // Scaled blur amount for high-DPI and 4K displays
+  const isBlurred = settings.enableBlur && (settings.blurAmount || 0) > 0;
+  const scaledBlur = isBlurred ? (settings.blurAmount || 0) * (Math.min(width, height) / 1080) : 0;
+
+  if (scaledBlur > 0) {
+    ctx.filter = `blur(${scaledBlur.toFixed(1)}px)`;
+  }
+
   // 1. Sophisticated Deep Dark Background with Volumetric Ambient Cones
   drawBackground(ctx, width, height, theme, settings, cx, cy);
 
@@ -37,15 +49,21 @@ export function renderLumoraWallpaper(
   // 3. Midground Fluid Glass Ribbons & Refractive Flowing Layers
   drawFlowingGlassRibbons(ctx, width, height, theme, settings, cx, cy, scale, time);
 
-  // 4. Central Sculpted Capital "L" with Refined Glass & Lighting
-  drawSculptedLetterL(ctx, cx, cy, scale, theme, settings, time);
-
-  // 5. Foreground Translucent Accent Shards & Specular Rim Caustics
-  drawForegroundGlassAccents(ctx, width, height, theme, settings, cx, cy, scale);
+  // 4. Central Sculpted Capital "L" with Refined Glass & Lighting (if enabled)
+  if (settings.showEmblem !== false) {
+    drawSculptedLetterL(ctx, cx, cy, scale, theme, settings, time);
+    // 5. Foreground Translucent Accent Shards & Specular Rim Caustics
+    drawForegroundGlassAccents(ctx, width, height, theme, settings, cx, cy, scale);
+  }
 
   // 6. Subtle Ambient Stardust / Volumetric Bokeh Particles
   if (settings.particleDensity > 0.05) {
     drawAmbientParticles(ctx, width, height, theme, settings, scale);
+  }
+
+  // Reset filter before typography overlay and film grain so branding & vignette remain ultra crisp
+  if (scaledBlur > 0) {
+    ctx.filter = 'none';
   }
 
   // 7. Optional Lumora Typography & Branding Text Overlay

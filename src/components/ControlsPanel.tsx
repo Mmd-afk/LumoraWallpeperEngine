@@ -12,12 +12,14 @@ import {
   Sliders, 
   Compass, 
   Eye, 
+  EyeOff,
   Maximize,
   Radio,
   Feather,
   Move,
   Target,
-  Grid
+  Grid,
+  Droplets
 } from 'lucide-react';
 import { LUMORA_THEMES, DEFAULT_SETTINGS } from '../data/themes';
 
@@ -130,105 +132,250 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
         onChangeTheme={onChangeTheme}
       />
 
-      {/* 3. Central "L" Emblem Positioning */}
+      {/* 3. Central "L" Emblem Visibility & Positioning */}
       <div className="p-4 rounded-2xl bg-neutral-900/60 border border-white/10 space-y-3">
         <div className="flex items-center justify-between">
           <label className="text-xs font-semibold text-neutral-200 uppercase tracking-wider flex items-center space-x-1.5">
-            <Move className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Central 'L' Position</span>
+            <Target className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Central 'L' Emblem</span>
           </label>
-          <div className="flex items-center space-x-2">
-            <span className="text-[10px] font-mono text-cyan-400">
-              X:{Math.round(posX)}% Y:{Math.round(posY)}%
-            </span>
-            {(posX !== 50 || posY !== 50) && (
-              <button
-                id="btn-reset-l-position"
-                onClick={() => {
-                  updateSetting('letterCenterX', 50);
-                  updateSetting('letterCenterY', 50);
-                }}
-                className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-900"
-              >
-                Center
-              </button>
-            )}
-          </div>
+
+          {/* Master Emblem Visibility Toggle */}
+          <button
+            id="btn-toggle-emblem-visibility"
+            onClick={() => updateSetting('showEmblem', settings.showEmblem === false ? true : false)}
+            className={`px-2.5 py-1 rounded-lg border text-xs font-medium transition-all flex items-center space-x-1.5 ${
+              settings.showEmblem !== false
+                ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300 shadow-[0_0_10px_rgba(0,216,246,0.15)]'
+                : 'bg-neutral-800 border-white/10 text-neutral-400 hover:bg-neutral-700 hover:text-white'
+            }`}
+          >
+            {settings.showEmblem !== false ? <Eye className="w-3.5 h-3.5 text-cyan-400" /> : <EyeOff className="w-3.5 h-3.5" />}
+            <span>{settings.showEmblem !== false ? 'Visible' : 'Hidden'}</span>
+          </button>
         </div>
 
-        {/* Quick Position Preset Anchors (3x3 Grid) */}
-        <div className="space-y-1">
-          <div className="text-[10px] text-neutral-400 flex items-center justify-between">
-            <span>Quick Anchors (Or drag on canvas)</span>
+        {settings.showEmblem !== false ? (
+          <div className="space-y-3 pt-1 border-t border-white/5">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="text-neutral-400 flex items-center space-x-1">
+                <Move className="w-3 h-3 text-cyan-400" />
+                <span>Emblem Position (X / Y)</span>
+              </span>
+              <div className="flex items-center space-x-2">
+                <span className="font-mono text-cyan-400">
+                  X:{Math.round(posX)}% Y:{Math.round(posY)}%
+                </span>
+                {(posX !== 50 || posY !== 50) && (
+                  <button
+                    id="btn-reset-l-position"
+                    onClick={() => {
+                      updateSetting('letterCenterX', 50);
+                      updateSetting('letterCenterY', 50);
+                    }}
+                    className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-900"
+                  >
+                    Center
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Quick Position Preset Anchors (3x3 Grid) */}
+            <div className="grid grid-cols-3 gap-1.5">
+              {[
+                { label: 'Top Left', x: 28, y: 30 },
+                { label: 'Top Center', x: 50, y: 32 },
+                { label: 'Top Right', x: 72, y: 30 },
+                { label: 'Center Left', x: 30, y: 50 },
+                { label: 'Centered (Default)', x: 50, y: 50 },
+                { label: 'Center Right', x: 70, y: 50 },
+                { label: 'Bottom Left', x: 28, y: 70 },
+                { label: 'Bottom Center', x: 50, y: 68 },
+                { label: 'Bottom Right', x: 72, y: 70 },
+              ].map((anchor) => {
+                const isMatch = Math.abs(posX - anchor.x) < 3 && Math.abs(posY - anchor.y) < 3;
+                return (
+                  <button
+                    key={anchor.label}
+                    id={`btn-anchor-${anchor.label.toLowerCase().replace(/\s+/g, '-')}`}
+                    onClick={() => {
+                      updateSetting('letterCenterX', anchor.x);
+                      updateSetting('letterCenterY', anchor.y);
+                    }}
+                    className={`py-1 px-1.5 rounded-lg border text-[10px] truncate transition-all text-center ${
+                      isMatch
+                        ? 'border-cyan-500 bg-cyan-950/40 text-cyan-300 font-semibold shadow-sm'
+                        : 'border-white/5 bg-neutral-950/40 text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900'
+                    }`}
+                  >
+                    {anchor.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Horizontal Position (X) */}
+            <div className="space-y-1">
+              <div className="flex justify-between text-[11px]">
+                <span className="text-neutral-400">Horizontal Offset (X)</span>
+                <span className="font-mono text-neutral-300">{Math.round(posX)}%</span>
+              </div>
+              <input
+                id="slider-letter-center-x"
+                type="range"
+                min="15"
+                max="85"
+                step="0.5"
+                value={posX}
+                onChange={(e) => updateSetting('letterCenterX', Number(e.target.value))}
+                className="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+              />
+            </div>
+
+            {/* Vertical Position (Y) */}
+            <div className="space-y-1">
+              <div className="flex justify-between text-[11px]">
+                <span className="text-neutral-400">Vertical Offset (Y)</span>
+                <span className="font-mono text-neutral-300">{Math.round(posY)}%</span>
+              </div>
+              <input
+                id="slider-letter-center-y"
+                type="range"
+                min="15"
+                max="85"
+                step="0.5"
+                value={posY}
+                onChange={(e) => updateSetting('letterCenterY', Number(e.target.value))}
+                className="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+              />
+            </div>
+
+            {/* Central L Scale */}
+            <div className="space-y-1 pt-1">
+              <div className="flex justify-between text-[11px]">
+                <span className="text-neutral-400">Emblem Scale</span>
+                <span className="font-mono text-neutral-300">{Math.round(settings.letterScale * 100)}%</span>
+              </div>
+              <input
+                id="slider-letter-scale"
+                type="range"
+                min="0.7"
+                max="1.3"
+                step="0.02"
+                value={settings.letterScale}
+                onChange={(e) => updateSetting('letterScale', Number(e.target.value))}
+                className="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+              />
+            </div>
           </div>
-          <div className="grid grid-cols-3 gap-1.5">
+        ) : (
+          <div className="p-3.5 rounded-xl bg-neutral-950/60 border border-dashed border-white/10 text-center space-y-2.5">
+            <p className="text-xs text-neutral-400 leading-relaxed">
+              The central 'L' emblem is completely removed. Pure abstract flowing glass ribbons and luminous ambient lighting are rendered.
+            </p>
+            <button
+              id="btn-restore-emblem"
+              onClick={() => updateSetting('showEmblem', true)}
+              className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/25 transition-colors"
+            >
+              Restore Central 'L'
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* 4. Wallpaper Blur Studio */}
+      <div className="p-4 rounded-2xl bg-neutral-900/60 border border-white/10 space-y-3">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-semibold text-neutral-200 uppercase tracking-wider flex items-center space-x-1.5">
+            <Droplets className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Wallpaper Blur</span>
+          </label>
+          
+          {/* Master Blur Toggle */}
+          <button
+            id="btn-toggle-blur"
+            onClick={() => {
+              const willEnable = !settings.enableBlur;
+              onChangeSettings({
+                ...settings,
+                enableBlur: willEnable,
+                blurAmount: willEnable && (!settings.blurAmount || settings.blurAmount === 0) ? 16 : settings.blurAmount || 16,
+              });
+            }}
+            className={`px-2.5 py-1 rounded-lg border text-xs font-medium transition-all flex items-center space-x-1.5 ${
+              settings.enableBlur
+                ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300 shadow-[0_0_10px_rgba(0,216,246,0.15)]'
+                : 'bg-neutral-800 border-white/10 text-neutral-400 hover:bg-neutral-700 hover:text-white'
+            }`}
+          >
+            <span>{settings.enableBlur ? 'Blur: ON' : 'Blur: OFF'}</span>
+          </button>
+        </div>
+
+        {/* Blur Amount Slider */}
+        <div className="space-y-1.5 pt-1">
+          <div className="flex justify-between text-[11px]">
+            <span className="text-neutral-400">Blur Radius / Intensity</span>
+            <span className="font-mono text-cyan-300">
+              {settings.enableBlur ? `${settings.blurAmount || 0}px` : '0px (Crisp)'}
+            </span>
+          </div>
+          <input
+            id="slider-wallpaper-blur"
+            type="range"
+            min="0"
+            max="50"
+            step="1"
+            value={settings.enableBlur ? (settings.blurAmount || 0) : 0}
+            onChange={(e) => {
+              const val = Number(e.target.value);
+              onChangeSettings({
+                ...settings,
+                enableBlur: val > 0,
+                blurAmount: val,
+              });
+            }}
+            className="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+          />
+        </div>
+
+        {/* Quick Blur Intensity Presets */}
+        <div className="space-y-1 pt-1">
+          <div className="text-[10px] text-neutral-400">Quick Blur Presets</div>
+          <div className="grid grid-cols-4 gap-1.5">
             {[
-              { label: 'Top Left', x: 28, y: 30 },
-              { label: 'Top Center', x: 50, y: 32 },
-              { label: 'Top Right', x: 72, y: 30 },
-              { label: 'Center Left', x: 30, y: 50 },
-              { label: 'Centered (Default)', x: 50, y: 50 },
-              { label: 'Center Right', x: 70, y: 50 },
-              { label: 'Bottom Left', x: 28, y: 70 },
-              { label: 'Bottom Center', x: 50, y: 68 },
-              { label: 'Bottom Right', x: 72, y: 70 },
-            ].map((anchor) => {
-              const isMatch = Math.abs(posX - anchor.x) < 3 && Math.abs(posY - anchor.y) < 3;
+              { label: 'Crisp', val: 0, enable: false },
+              { label: 'Subtle', val: 8, enable: true },
+              { label: 'Soft', val: 18, enable: true },
+              { label: 'Deep', val: 36, enable: true },
+            ].map((preset) => {
+              const isMatch = preset.enable 
+                ? (settings.enableBlur && settings.blurAmount === preset.val)
+                : (!settings.enableBlur || settings.blurAmount === 0);
               return (
                 <button
-                  key={anchor.label}
-                  id={`btn-anchor-${anchor.label.toLowerCase().replace(/\s+/g, '-')}`}
+                  key={preset.label}
+                  id={`btn-blur-${preset.label.toLowerCase()}`}
                   onClick={() => {
-                    updateSetting('letterCenterX', anchor.x);
-                    updateSetting('letterCenterY', anchor.y);
+                    onChangeSettings({
+                      ...settings,
+                      enableBlur: preset.enable,
+                      blurAmount: preset.val,
+                    });
                   }}
-                  className={`py-1 px-1.5 rounded-lg border text-[10px] truncate transition-all text-center ${
+                  className={`py-1 px-1.5 rounded-lg border text-[10px] transition-all text-center ${
                     isMatch
                       ? 'border-cyan-500 bg-cyan-950/40 text-cyan-300 font-semibold shadow-sm'
                       : 'border-white/5 bg-neutral-950/40 text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900'
                   }`}
                 >
-                  {anchor.label}
+                  {preset.label}
                 </button>
               );
             })}
           </div>
-        </div>
-
-        {/* Horizontal Position (X) */}
-        <div className="space-y-1 pt-1">
-          <div className="flex justify-between text-[11px]">
-            <span className="text-neutral-400">Horizontal Offset (X)</span>
-            <span className="font-mono text-neutral-300">{Math.round(posX)}%</span>
-          </div>
-          <input
-            id="slider-letter-center-x"
-            type="range"
-            min="15"
-            max="85"
-            step="0.5"
-            value={posX}
-            onChange={(e) => updateSetting('letterCenterX', Number(e.target.value))}
-            className="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
-          />
-        </div>
-
-        {/* Vertical Position (Y) */}
-        <div className="space-y-1">
-          <div className="flex justify-between text-[11px]">
-            <span className="text-neutral-400">Vertical Offset (Y)</span>
-            <span className="font-mono text-neutral-300">{Math.round(posY)}%</span>
-          </div>
-          <input
-            id="slider-letter-center-y"
-            type="range"
-            min="15"
-            max="85"
-            step="0.5"
-            value={posY}
-            onChange={(e) => updateSetting('letterCenterY', Number(e.target.value))}
-            className="w-full h-1.5 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
-          />
         </div>
       </div>
 

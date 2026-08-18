@@ -74,7 +74,7 @@ export const WallpaperCanvas: React.FC<WallpaperCanvasProps> = ({
       });
 
       // If user is actively dragging the central L emblem, draw subtle alignment guide
-      if (isDraggingEmblem) {
+      if (isDraggingEmblem && settings.showEmblem !== false) {
         const lx = ((settings.letterCenterX !== undefined ? settings.letterCenterX : 50) / 100) * displayWidth;
         const ly = ((settings.letterCenterY !== undefined ? settings.letterCenterY : 50) / 100) * displayHeight;
 
@@ -174,7 +174,7 @@ export const WallpaperCanvas: React.FC<WallpaperCanvasProps> = ({
 
   // Check if click is near the sculpted L emblem center
   const isNearEmblem = (clientX: number, clientY: number): boolean => {
-    if (!containerRef.current) return false;
+    if (!containerRef.current || settings.showEmblem === false) return false;
     const rect = containerRef.current.getBoundingClientRect();
     const w = rect.width;
     const h = rect.height;
@@ -336,7 +336,7 @@ export const WallpaperCanvas: React.FC<WallpaperCanvasProps> = ({
       />
 
       {/* Center "L" Position Indicator Pill */}
-      {((settings.letterCenterX !== undefined && settings.letterCenterX !== 50) || 
+      {settings.showEmblem !== false && ((settings.letterCenterX !== undefined && settings.letterCenterX !== 50) || 
         (settings.letterCenterY !== undefined && settings.letterCenterY !== 50)) && (
         <div className="absolute top-4 right-4 z-20 flex items-center space-x-1.5 p-1.5 px-2.5 rounded-xl bg-neutral-950/70 backdrop-blur-md border border-cyan-500/30 text-[11px] text-cyan-300 shadow-xl">
           <Target className="w-3.5 h-3.5 text-cyan-400" />
