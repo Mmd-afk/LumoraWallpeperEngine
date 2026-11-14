@@ -93,7 +93,7 @@ A license will be added soon.
 ## Links
 
 - Lumora OS — Coming Soon
-- Website — Coming Soon
+- Website — [lumoralinux.tech](https://www.lumoralinux.tech/)
 
 ---
 
